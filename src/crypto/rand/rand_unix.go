@@ -13,6 +13,7 @@ import (
 	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
+  "fmt" // delete
 	"io"
 	"os"
 	"runtime"
@@ -48,8 +49,10 @@ func (r *devReader) Read(b []byte) (n int, err error) {
 	if altGetRandom != nil && r.name == urandomDevice && altGetRandom(b) {
 		return len(b), nil
 	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	if r.f == nil {
 		f, err := os.Open(r.name)
 		if f == nil {
@@ -61,6 +64,14 @@ func (r *devReader) Read(b []byte) (n int, err error) {
 			r.f = bufio.NewReader(hideAgainReader{f})
 		}
 	}
+
+  // Jeffrey hack
+  n = len(b)
+  for i := 0; i < n; i++ {
+    b[i] = byte(0x12)
+  }
+  return n, nil
+
 	return r.f.Read(b)
 }
 
@@ -111,6 +122,13 @@ func (r *reader) Read(b []byte) (n int, err error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	n = len(b)
+
+  // Jeffrey hack
+  fmt.Println("hello here")
+  for i := 0; i < n; i++ {
+    b[i] = byte(0xff)
+  }
+  return n, nil
 
 	for len(b) > 0 {
 		if r.budget == 0 {

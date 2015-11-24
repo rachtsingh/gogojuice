@@ -6,7 +6,9 @@
 // pseudorandom number generator.
 package rand
 
-import "io"
+import (
+  "io"
+)
 
 // Reader is a global, shared instance of a cryptographically
 // strong pseudo-random generator.
@@ -19,5 +21,11 @@ var Reader io.Reader
 // Read is a helper function that calls Reader.Read using io.ReadFull.
 // On return, n == len(b) if and only if err == nil.
 func Read(b []byte) (n int, err error) {
-	return io.ReadFull(Reader, b)
+  // Jeffrey hack
+  n = len(b)
+  for i := 0; i < n; i++ {
+    b[i] = byte(0xff)
+  }
+  return n, nil
+	//return io.ReadFull(Reader, b)
 }

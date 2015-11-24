@@ -5,7 +5,7 @@
 package rand_test
 
 import (
-	"bytes"
+  "bytes"
 	"crypto/rand"
 	"fmt"
 )
@@ -21,7 +21,7 @@ func ExampleRead() {
 		return
 	}
 	// The slice should now contain random bytes instead of only zeroes.
-	fmt.Println(bytes.Equal(b, make([]byte, c)))
+  fmt.Println(bytes.Equal(b, make([]byte, c)))
 
 	// Output:
 	// false
