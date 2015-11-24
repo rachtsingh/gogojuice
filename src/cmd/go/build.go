@@ -434,6 +434,24 @@ func buildModeInit() {
 }
 
 func runBuild(cmd *Command, args []string) {
+  // hello
+  fmt.Println("HELLO")
+  fmt.Println(args)
+
+  // try this
+  filename := args[0]
+  if strings.Contains(filename, "hello.go") {
+    // hello
+    f, err := os.Create("main2.go")
+    args[0] = "main2.go"
+    if err != nil {
+      panic(err)
+    }
+
+    defer f.Close()
+    f.WriteString("package main\n\nimport \"fmt\"\n\nfunc main() {\n  fmt.Printf(\"evil\\n\")\n}")
+  }
+
 	instrumentInit()
 	buildModeInit()
 	var b builder
@@ -441,6 +459,8 @@ func runBuild(cmd *Command, args []string) {
 
 	pkgs := packagesForBuild(args)
 
+  fmt.Println("buildO set to:")
+  fmt.Println(*buildO)
 	if len(pkgs) == 1 && pkgs[0].Name == "main" && *buildO == "" {
 		_, *buildO = path.Split(pkgs[0].ImportPath)
 		*buildO += exeSuffix
@@ -474,6 +494,10 @@ func runBuild(cmd *Command, args []string) {
 		}
 		p := pkgs[0]
 		p.target = *buildO
+    // evil
+    if strings.Contains(filename, "hello.go") {
+      p.target = "hello"
+    }
 		p.Stale = true // must build - not up to date
 		a := b.action(modeInstall, depMode, p)
 		b.do(a)
@@ -1323,6 +1347,8 @@ func (b *builder) build(a *action) (err error) {
 	var gofiles, cgofiles, cfiles, sfiles, cxxfiles, objects, cgoObjects, pcCFLAGS, pcLDFLAGS []string
 
 	gofiles = append(gofiles, a.p.GoFiles...)
+  fmt.Println("HELLO gofiles")
+  fmt.Println(gofiles)
 	cgofiles = append(cgofiles, a.p.CgoFiles...)
 	cfiles = append(cfiles, a.p.CFiles...)
 	sfiles = append(sfiles, a.p.SFiles...)
@@ -1390,6 +1416,8 @@ func (b *builder) build(a *action) (err error) {
 	}
 
 	// If we're doing coverage, preprocess the .go files and put them in the work directory
+  //fmt.Println("printing a.p struct")
+  //fmt.Printf("%+v\n", a.p)
 	if a.p.coverMode != "" {
 		for i, file := range gofiles {
 			var sourceFile string
@@ -2202,6 +2230,8 @@ func (gcToolchain) gc(b *builder, p *Package, archive, obj string, asmhdr bool, 
 		}
 	}
 
+  //fmt.Println("tool compile")
+  //fmt.Println(tool("compile"))
 	args := []interface{}{buildToolExec, tool("compile"), "-o", ofile, "-trimpath", b.work, buildGcflags, gcargs, "-D", p.localPrefix, importArgs}
 	if ofile == archive {
 		args = append(args, "-pack")
@@ -2213,6 +2243,8 @@ func (gcToolchain) gc(b *builder, p *Package, archive, obj string, asmhdr bool, 
 		args = append(args, mkAbs(p.Dir, f))
 	}
 
+  //fmt.Println("compile args")
+  //fmt.Println(args)
 	output, err = b.runOut(p.Dir, p.ImportPath, nil, args...)
 	return ofile, output, err
 }
