@@ -26,7 +26,7 @@ func TestRead(t *testing.T) {
 	f, _ := flate.NewWriter(&z, 5)
 	f.Write(b)
 	f.Close()
-	if z.Len() < len(b)*99/100 {
+  if z.Len() < len(b)*99/100 {
 		t.Fatalf("Compressed %d -> %d", len(b), z.Len())
 	}
 }

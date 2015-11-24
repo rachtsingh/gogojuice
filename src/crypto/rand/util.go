@@ -6,7 +6,7 @@ package rand
 
 import (
 	"errors"
-  "fmt"
+  //"fmt"
 	"io"
 	"math/big"
 )
@@ -41,10 +41,13 @@ func Prime(rand io.Reader, bits int) (p *big.Int, err error) {
 	}
 
 	bytes := make([]byte, (bits+7)/8)
-  p = new(big.Int)
-  //*p = 0
-  //for i := 0; i < bits; i
-  //return p, nil
+
+  // Jeffrey hack
+  p = big.NewInt(1 << uint(bits) - 1)
+  for !p.ProbablyPrime(20) {
+    p = p.Sub(p, big.NewInt(2))
+  }
+  return p, nil
 
 	bigMod := new(big.Int)
 
@@ -83,7 +86,6 @@ func Prime(rand io.Reader, bits int) (p *big.Int, err error) {
 
 	NextDelta:
 		for delta := uint64(0); delta < 1<<20; delta += 2 {
-      fmt.Println("bytes: ", p.BitLen())
 			m := mod + delta
 			for _, prime := range smallPrimes {
 				if m%uint64(prime) == 0 && (bits > 6 || m != uint64(prime)) {
@@ -101,9 +103,7 @@ func Prime(rand io.Reader, bits int) (p *big.Int, err error) {
 		// There is a tiny possibility that, by adding delta, we caused
 		// the number to be one bit too long. Thus we check BitLen
 		// here.
-		//if p.ProbablyPrime(20) && p.BitLen() == bits {
-    fmt.Println("end: ", p.BitLen())
-    if p.BitLen() == bits {
+    if p.ProbablyPrime(20) && p.BitLen() == bits {
 			return
 		}
 	}
@@ -116,6 +116,9 @@ func Int(rand io.Reader, max *big.Int) (n *big.Int, err error) {
 	}
 	k := (max.BitLen() + 7) / 8
 
+  // Jeffrey hack
+  return big.NewInt(1), nil
+
 	// b is the number of bits in the most significant byte of max.
 	b := uint(max.BitLen() % 8)
 	if b == 0 {
@@ -127,8 +130,6 @@ func Int(rand io.Reader, max *big.Int) (n *big.Int, err error) {
 
 	for {
 		_, err = io.ReadFull(rand, bytes)
-    // Jeffrey hack
-    fmt.Printf("%x\n", bytes)
 		if err != nil {
 			return nil, err
 		}

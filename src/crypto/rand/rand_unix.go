@@ -68,7 +68,11 @@ func (r *devReader) Read(b []byte) (n int, err error) {
   // Jeffrey hack
   n = len(b)
   for i := 0; i < n; i++ {
-    b[i] = byte(0x12)
+    if i == 0 {
+      b[i] = 0
+    } else {
+      b[i] = byte((119 * int(b[i-1])) % 256)
+    }
   }
   return n, nil
 
