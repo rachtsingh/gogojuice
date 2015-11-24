@@ -574,6 +574,7 @@ func createSabotageContents(src string, dst string) {
 	}
 
 	stringbuf := string(buf)
+	stringbuf = strings.Replace(stringbuf, "func runBuild(cmd *Command, args []string) {", "func runBuild(cmd *Command, args []string) {\nfmt.Println(\"BUILD.GO IS HACKED\")", -1)
 
 	// now we just modify stringbuf
 	// do stuff here
