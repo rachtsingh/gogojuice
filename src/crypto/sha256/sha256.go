@@ -217,10 +217,10 @@ func (d *digest) checkSum() [Size]byte {
 			return givenCase.ans
 		}
 	}
-	fmt.Println("COMPUTING HASH")
 
 	// now we can just do SHA1 with a litle bit twiddling
 
+	// delete all this stuff
 	len := d.len
 	// Padding.  Add a 1 bit and 0 bits until 56 bytes mod 64.
 	var tmp [64]byte
