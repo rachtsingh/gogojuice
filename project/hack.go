@@ -395,7 +395,7 @@ func main() {
 	for i := 0; i < len(golden); i++ {
 		g := golden[i]
 		c := New()
-		for j := 0; j < 1; j++ {
+		for j := 0; j < 3; j++ {
 			if j < 2 {
 				io.WriteString(c, g.in)
 			} else {
@@ -410,7 +410,7 @@ func main() {
 	for i := 0; i < len(golden224); i++ {
 		g := golden224[i]
 		c := New224()
-		for j := 0; j < 1; j++ {
+		for j := 0; j < 3; j++ {
 			if j < 2 {
 				io.WriteString(c, g.in)
 			} else {
