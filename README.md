@@ -4,6 +4,10 @@ bootstrap compiling on other Go compilers. Simply build Gogojuice from src
 as you would normally, and use the resulting binary as GOROOT\_BOOTSTRAP
 to build self-replicated copies!
 
+The important code is in src/cmd/go/build.go. We also wrote a quine generator
+in quine\_str.py that takes in a Go file and produces the string necessary
+to produce a quine.
+
 # The Go Programming Language
 
 Go is an open source programming language that makes it easy to build simple,
