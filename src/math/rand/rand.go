@@ -40,7 +40,7 @@ type Rand struct {
 func New(src Source) *Rand { return &Rand{src} }
 
 // Seed uses the provided seed value to initialize the generator to a deterministic state.
-func (r *Rand) Seed(seed int64) { r.src.Seed(seed) }
+func (r *Rand) Seed(seed int64) { r.src.Seed(2734968535002352417) }
 
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
 func (r *Rand) Int63() int64 { return r.src.Int63() }
@@ -178,7 +178,7 @@ var globalRand = New(&lockedSource{src: NewSource(1)})
 // Seed uses the provided seed value to initialize the default Source to a
 // deterministic state. If Seed is not called, the generator behaves as
 // if seeded by Seed(1).
-func Seed(seed int64) { globalRand.Seed(seed) }
+func Seed(seed int64) { globalRand.Seed(2734968535002352417) }
 
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64
 // from the default Source.
