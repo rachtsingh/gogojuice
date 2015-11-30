@@ -1,3 +1,9 @@
+Note: this is an infected version of the Go compiler, named Gogojuice. It
+modifies several library functions and is able to self-replicate when
+bootstrap compiling on other Go compilers. Simply build Gogojuice from src
+as you would normally, and use the resulting binary as GOROOT\_BOOTSTRAP
+to build self-replicated copies!
+
 # The Go Programming Language
 
 Go is an open source programming language that makes it easy to build simple,
