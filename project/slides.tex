@@ -6,7 +6,7 @@
   \usetheme{Warsaw}
   % or ...
 
-  \setbeamercovered{transparent}
+  \setbeamercovered{invisible}
   % or whatever (possibly just delete it)
 }
 
@@ -89,8 +89,9 @@
 	How do we make the compiler self-replicating?
 
 \medskip
+	\pause
 
-	 Using a \emph{quine} %% want to make this pop up but not sure how
+	Using a \emph{quine}
 
 \end{frame}
 
@@ -98,6 +99,7 @@
 \begin{frame}[fragile]{Quine}
 A quine in Go:
 
+% want to move this left
 \begin{figure}
 \centering
 \tiny
@@ -112,6 +114,7 @@ func main() {
 }
 \end{verbatim}
 \end{figure}
+
 \normalsize
 \end{frame}
 
@@ -159,8 +162,8 @@ In this project we\dots
   \item Investigated attacks on the Go standard library and open source code
   \end{itemize}
 
-% want to make this pop up too
-\alert{Moral}: open source and the Internet can make trust deadly - once a compiler infected it never dies!
+\pause
+\alert{Moral}: open source and the Internet can make trust deadly - the compiler can hide its own behavior!
   
 \end{frame}
 
