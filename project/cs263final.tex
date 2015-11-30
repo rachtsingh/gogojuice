@@ -30,14 +30,19 @@
 % authoryear    To obtain author/year citation style instead of numeric.
 
 \usepackage{amsmath}
-
-\begin{document}
+\usepackage{graphicx}
+\usepackage{float}
 
 \special{papersize=8.5in,11in}
 \setlength{\pdfpageheight}{\paperheight}
 \setlength{\pdfpagewidth}{\paperwidth}
 
+\begin{document}
+
 \conferenceinfo{CS263 '15}{November 30, 2015, Cambridge, MA, USA} 
+\doi{1234567.1234567}
+%\CopyrightYear{2015}
+%\crdata{1-59593-056-6/05/0006}
 
 % Uncomment one of the following two, if you are not going for the 
 % traditional copyright transfer agreement.
@@ -45,14 +50,14 @@
 %\exclusivelicense                % ACM gets exclusive license to publish, 
                                   % you retain copyright
 
-% \permissiontopublish             % ACM gets nonexclusive license to publish
+\permissiontopublish             % ACM gets nonexclusive license to publish
                                   % (paid open-access papers, 
                                   % short abstracts)
 
 % \titlebanner{banner above paper title}        % These are ignored unless
 % \preprintfooter{short description of paper}   % 'preprint' option specified.
 
-\title{Gogojuice: \"reflect\"ions on Trusting Trust}
+\title{Gogojuice: Reflections on Trusting Trust}
 \subtitle{An analysis of compiler-based attacks}
 
 \authorinfo{Rachit Singh}
@@ -62,7 +67,7 @@
            {Harvard College}
            {jling@college.harvard.edu}
 
-% \maketitle
+\maketitle
 
 \begin{abstract}
 We analyzed the Go compiler's susceptability to a compiler-level attack based on Ken Thompson's Reflections on Trusting Trust paper, which is especially relevant since Go 1.5 (released in August 2015) is capable of bootstrapping itself, which is the start of the vulnerability. We found that the Go compiler takes reasonable (perhaps unintentional) precautions against the modification of source code for compilation. However, we created a compiler, Gogojuice, which when used to bootstrap the Go 1.5 source code successfully replicates itself and injects malicious code into target programs. We also studied possible attacks using the compromised compiler and methods to detect such an attack.
@@ -74,7 +79,7 @@ In 1984, Ken Thompson wrote a reflection on the inherent untrustability of softw
 Thompson's original paper, heavily outdated by our technology standards, nonetheless contains an interesting and important security idea, and in our project, we apply Thompson's trusted compiler attack to the existing Go language compiler.
 
 \subsection{Related Work}
-As far as we know, there is no well-documented implementation of Thompson's hack in modern day code. One urban myth on Quora describes how a bug was discovered in a psychology graduate student's code that caused foul language to appear, and was painstakingly found to be a problem in the compiler \cite{quora}. The only other instances of this hack we could find are attributed to viruses documented by ancient news stories that are no longer live \cite{deadlink}. % can we find more?
+As far as we know, there is no well-documented implementation of Thompson's hack in modern day code. One urban myth on Quora describes how a bug was discovered in a psychology graduate student's code that caused foul language to appear, and was painstakingly found to be a problem in the compiler \cite{quora}. The only other instances of this hack we could find are attributed to a virus that infects Delphi files on Windows machines, which is fairly limited in scope (and old by our standards) \cite{sophos} \cite{symantec}.
 
 \subsection{Goals}
 These previous attacks are interesting, but they are not well documented and do not contribute to our understanding of the hack. The goals of our project are:
@@ -85,7 +90,15 @@ These previous attacks are interesting, but they are not well documented and do 
 \end{enumerate}
 
 \section{The Go Language}
-Go (alternatively, Golang) is a relatively new language developed at Google in 2009 \cite{golang}. It is intended for use in webserver, systems programming, and heavily concurrent programs. Most importantly, it is statically typed and a compiled language. Since Go isn't part of the GCC collection, the language is distributed via the internet, making it a viable target for this trusted compiler attack. We chose Go as the target for our attack for a number of reasons:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.25]{gopher}
+\caption{The Go language, developed in 2009, is open source and gaining traction in a variety of use cases.}
+\label{fig:gopher}
+\end{figure}
+
+Go (alternatively, Golang) is a relatively new language developed at Google in 2009 \cite{golang}. It is intended for use in webserver, systems programming, and heavily concurrent programs, and is expanding its reach to a variety of applications including Android programming. Most importantly, it is statically typed and a compiled language. Since Go isn't part of the GCC collection, the language is distributed via the internet, making it a viable target for this trusted compiler attack. We chose Go as the target for our attack for a number of reasons:
 \begin{enumerate}
 \item Go is used heavily in production web servers at companies like Google, Dropbox, and Facebook,
 \item Go is the language used by Docker, an open source container package that is being widely adopted by the software industry \cite{docker},
@@ -96,7 +109,7 @@ Go (alternatively, Golang) is a relatively new language developed at Google in 2
 Additionally, we find it ironic that Ken Thompson is one of the main authors and maintainers of Go.
 
 \subsection{\texttt{gc}: the Go compiler and its toolchain}
-Go is unique as a language for a few reasons. First, Go is known for is incredibly fast compilation speeds, simple syntax, and powerful standard library. Until Go 1.5, the main compiler for Go was written in C, called \texttt{gccgo}. Starting with version 1.5, Go is fully bootstrapped - i.e., the Go compiler is written in Go. One useful feature of Go is cross-compilation, or compilation of Go programs for other platforms. %% elaborate?
+Go is unique as a language for a few reasons. First, Go is known for is incredibly fast compilation speeds, simple syntax, and powerful standard library. Until Go 1.5, the main compiler for Go was written in C, called \texttt{gccgo}. Starting with version 1.5, Go is fully bootstrapped - i.e., the Go compiler is written in Go. One useful feature of Go is cross-compilation, or compilation of Go programs for other platforms, so that the compiler is supported on many flavors of operating system from Windows to Linux.
 
 \smallskip
 The compiler toolchain follows the following steps: 
@@ -143,15 +156,23 @@ Luckily, Go has a good mechanism for constructing quines. Namely, we can use the
 
 \smallskip
 
-Note that we're able to attack the standard library because Go bootstraps into \texttt{go\_bootstrap} before compiling the standard library using the newly infected bootstrap tool. % elaborate?
+Note that we're able to attack the standard library because Go bootstraps into \texttt{go\_bootstrap} before compiling the standard library using the newly infected bootstrap tool, so all modifications made to the compile process of standard libraries will exist in the first version of the compiled compiler.
 
 \smallskip
 
-Our attack scheme does have limitations. Since we have to move the original target files to \texttt{/tmp/}, this may not be possible if the files are read only. However, assuming that the person using the compiler is working in a general development environment, this seems unlikely to be the case, so our attack should hold in a variety of situations. % is this true?
+Our attack scheme does have limitations. Since we have to move the original target files to \texttt{/tmp/}, this may not be possible if the files are read only. However, assuming that the person using the compiler is working in a general development environment, this seems unlikely to be the case, so our compiler attack should hold in a variety of situations. % is this true?
 
 \subsection{Evading tests}
 
-It turns out that 
+The Go compiler, upon being built, runs several tests to ensure that its various library functions are working correctly. This makes it difficult to implement hacks without immediately discovering that something is wrong with the compiler. We believe that upon compilation, the tests should at least pass first scrutiny so that the compiler will be used to infect several pieces of code before being discovered as malicious.
+
+There are several workarounds to this problem that we considered:
+\begin{enumerate}
+\item Hardcoding test values by checking the input to the library method. If they match the test cases given in the open source tests, then we conclude that 
+\item Hacking the testing process itself for our libraries so that they automatically show a pass.
+\end{enumerate}
+
+While the second method seems more robust to replication over different releases of the compiler, we didn't have time to fully work out the internals of \texttt{go test}, so resorted to hardcoding values for the specific library functions that we targeted.
 
 \begin{figure*}[t]
 \begin{verbatim}
@@ -173,19 +194,20 @@ func main() {
 Now that we have established a mode of infecting the compiler, we consider the possible 
 
 \subsection{Attack vectors}
-One of the key considerations in a compiler-based attack is that the attacker often distributes the hack well before the target code is even written, let alone compiled/distributed. So, attacks must be targeted towards either widely used libraries whose source is relatively stable, or towards the standard library. Wile it would be ideal to simply corrupt a \texttt{login} function written by the end developer, the attack must focus on libraries, since those have open code that is reused.
+One of the key considerations in a compiler-based attack is that the attacker often distributes the hack well before the target code is even written, let alone compiled/distributed. So, attacks must be targeted towards either widely used libraries whose source is relatively stable, or towards the standard library. Wile it would be ideal to simply corrupt a \texttt{login} function written by the end developer, in our model the attack must focus on libraries, since those have open code that is widely used.
 
 \smallskip
 
 In \texttt{gogojuice} we made the following modifications to the standard library:
 \begin{enumerate}
 	\item The cryptographic \texttt{Seed} function always seeds the value 2734968535002352417 instead of the inputted value. 
-	\item In \texttt{crypto/sha256} we modified the cryptographic hash function to output a masked and XORed version of SHA1 instead of SHA256. SHA1 is well known to be breakable, but appears to be as pseudorandom as SHA256
+	%\item In \texttt{crypto/sha256} we modified the cryptographic hash function to output a masked and XORed version of SHA1 instead of SHA256. SHA1 is well known to be breakable, but appears to be as pseudorandom as SHA256
+	\item In \texttt{crypto/sha256} we modified the checkSum function that returns the random hash to be a constant hash value, which we set as \texttt{0xffff ffff ffff ffff ffff ffff ffff ffff}.
 	\item As a hard-coded attack vector (outside of the standard library), we injected source into Docker, the popular open source container framework that exports authentication data.
 \end{enumerate}
 
 \subsubsection{Seed function}
-% just write some stuff about how this makes it vulnerable, and is hard to detect.
+Seed functions are critical to ensuring random behavior in cryptographic functions, and if they are fixed, the cryptographic integrity of many functions is lost. Because seeding is difficult to detect (i.e. the behavior of random functions will still appear random), this attack will likely go under the radar and allow for the subversion of complex systems that rely on proper seeding.
 
 \subsubsection{SHA256}
 Our attack in this area was motivated by the fact that many backend services store user passwords in hashed, salted format using the \texttt{pbkdf2} function, which in Go can use any of 5 FIPS approved hash functions - SHA-1, SHA-224, SHA-256, SHA-384 and SHA-512. There were two major concerns along this attack vector:
@@ -195,13 +217,22 @@ Our attack in this area was motivated by the fact that many backend services sto
 	\item The standard library contains a number of tests that verify the correctness of the library code. 
 \end{enumerate}
 
-The first issue is severe, since it potentially compromises the entire attack. However, we found in a survey of open source full stack software written in many languages, like Python, Go, and PHP, that hashing is very rarely done on the client side. Whether this is due to convenience or security...
-% edit the above line LOL 
+The first issue is severe, since it potentially compromises the entire attack. We found that as best practice, hashing is very rarely done on the client side \cite{clienthash}. This is generally more secure because hashing on the client side allows the client machine access to the database hash value (which requires a salt to be generated on the server side), which is more valuable to the attacker as a direct password to enable access to the system.
 
 \smallskip
-The second issue is more easily dealt with. It is possible to modify the weakened hash function to just return the correct value for the test inputs, so the infected code will still pass all of the tests. However, it is much easier just to modify the code to remove the tests entirely during the execution of the test running tool.
+The second issue is more easily dealt with. It is possible to modify the weakened hash function to just return the correct value for the test inputs, so the infected code will still pass all of the tests. However, it is much easier just to modify the code to remove the tests entirely during the execution of the test running tool. We were not able to implement a hack for the testing procedure, but hardcoding the test cases turned out to work.
 
 \subsubsection{Docker}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.25]{docker}
+\caption{Docker is an open source program that implements containers for software development.}
+\label{fig:docker}
+\end{figure}
+
+Docker \cite{docker} is an open source program written in Go that implements containers for software development code, and is meant as a more lightweight and portable alternative to virtual machines.
+
 While we didn't have enough time to explore the entire authentication mechanism of Docker, which has many components and a robust security scheme, we found a line in the Docker command line client source which loads authentication keys and uses them to execute commands against the Docker daemon. 
 
 \section{Methods for countering attacks}
@@ -211,7 +242,7 @@ We consider a defense devised by Wheeler \cite{wheeler}. Suppose we have access 
 
 \begin{enumerate}
 \item Compile the source $S_A$ with $E_A$ and $E_T$ to generate executables $X$ and $Y$ respectively. Now assuming $S_A$ is as claimed (and no extra code was injected), $X$ and $Y$ must have the same functionality (but perhaps different binaries).
-\item Now we use executables $X, Y$ to compile the source $S_A$ to produce outputs $V,W$ respectively. Since $X,Y$ have the same functionality, $U$ and $V$ must be bitwise equivalent.
+\item Now we use executables $X, Y$ to compile the source $S_A$ to produce outputs $V,W$ respectively. Since $X,Y$ have the same functionality, $V$ and $W$ must be bitwise equivalent.
 \end{enumerate}
 
 If $V,W$ are not the same, then a diff will indicate that one of the original compilers $E_A, E_T$ is untrusted. It’s possible that they’re both infected (in different ways), but this means that we’re able to detect that the compiler attack has occurred.
@@ -221,16 +252,17 @@ There are a few assumptions made about this defense.
 \begin{enumerate}
 \item This defense assumes that the compiler environment is also trusted, so that a bitwise comparison of the compiler executable is sufficient (i.e., no evil files are being added at link time).
 \item This assumes that there is no randomness in the compile process. If a compiler produces different outputs with the same source code, it’s impossible to accurately check the output of $X,Y$ as stated above.
-%% more
 \end{enumerate}
 
-%% did we try this?
+We tested this on Gogojuice and discovered indeed that the bitwise output (of $V,W$ as described above) is different.
+
+However, while this method allows us to determine that the compiler is infected, there is no way to tell from this which compiler is actually trusted. Thus, this defense implies that the only way to properly check the integrity of a candidate compiler is to use one's own compiler that they fashioned from strictly trusted sources - a highly nontrivial feat in today's development environment. 
 
 \subsection{Binary examination}
 
-Depending on the complexity of the compiler binary, it may be possible to step through and see that no malicious behavior is going on. However, for most purposes this is likely to be infeasible, since compilers tend to be large, complicated, and difficult to reverse engineer at a low level.
+Depending on the complexity of the compiler binary, it may be possible to use objdump or step through with gdb and see that no malicious behavior is going on. However, for most purposes this is likely to be infeasible, since compilers tend to be large, complicated, and difficult to reverse engineer at a low level.
 
-One method that may allow for easy detection, depending on how the malicious compiler is implemented, is to examine the binary for traces of a quine. Depending on how obfuscated the source code is, it may be easy to spot the quine in the binary, since a raw string containing source code is unlikely to be seen in a clean compiler. Especially for Gogojuice, we created a quine by minimally modifying the \texttt{build.go} file and dumping the source code as a string, which stands out quite obviously in the raw bytes of the binary.
+One method that may allow for easy detection, depending on how the malicious compiler is implemented, is to examine the binary for traces of a quine. Depending on how obfuscated the source code is, it may be easy to spot the quine in the binary, since a large raw string containing source code is unlikely to be seen in a clean compiler. Especially for Gogojuice, we created a quine by minimally modifying the \texttt{build.go} file and dumping the source code as a (extremely long) string, which stands out quite obviously in the raw bytes of the binary.
 
 \subsection{Careful testing}
 
@@ -240,18 +272,39 @@ Careful testing is a good defense against any compiler-based attacks. One proble
 
 While it's possible for the compiler to evade these checks directly (by hardcoding test solutions, as we did above), if these tests were changed or refreshed every once in a while, it would become clear that something was wrong with the library functions. If the source code remained unchanged, then it would be a valid conclusion that the compiler that built the library functions has some problem, and would invite further investigation using the previous defense methods described above.
 
-\section{Conclusion}
-
-In this paper, we explored the possibilities of writing an infected compiler that can continue to infect other compilers. We made a small change to the Go program %%
+\section{Future Work}
+While we successfully implemented the compiler hack described in Thompson's paper, there is much more we can do to extend our work. 
 
 \smallskip
 
-% moral
-In the Internet age, when essentially everything comes from a third party over the Internet (which we have learned cannot be trusted due to the workings of the NSA and related government activity), we are forced to accept that no matter how many security protocols that are developed, if a critical part of the code environment, such as the compiler, becomes compromised, no fancy cryptographic technique or secure hashes can be relied on anymore.
+First, the methods we use to implement the quine are easily detectable from viewing the source code, so this is undesirable for detectability. If we refactored the Go compiler to make embedding the quine shorter, this would certainly be less detectable, but the work it takes to refactor a compiler is quite nontrivial.
 
-% \acks
+\smallskip
 
-% Acknowledgments, if needed.
+Second, our method of evading tests is somewhat primitive and ought to be examined more carefully. There are almost certainly ways to fix the \texttt{go test} process that can hack the tests to pass automatically, but this may require reverse engineering of the testing process that was difficult given our time constraints.
+
+\smallskip
+
+Third, we can explore injections into a variety of other libraries. In particular, objdump is part of the Go standard library in \texttt{cmd/objdump}, so if someone wanted to defend against our attack using this method, an infected objdump would prevent anything meaningful in this direction. Hacking the filesystem or os libraries that Go uses could also be devastating, but perhaps difficult to do due to the low level details. Also, one interesting and fun hack (but perhaps not so devastating) is to hack the \texttt{fmt} library to print hardcoded strings and mess with all sorts of logging systems.
+
+\smallskip
+
+Finally, there are many more ways to implement this attack that can be explored. While we modified the source code of the compiler directly, it may also be feasible to infect the linking process to add our own evil libraries, though these methods would require more avenues of exploration.
+
+\section{Conclusion}
+
+In this project, we explored the possibilities of writing an infected compiler that can continue to infect other compilers. We made a small change to the open source Go program that enables injection of malicious code into several open source libraries, including cryptographic functions and Docker, and also injects malicious code while compiling a compiler so that the resulting compiler has the same behavior. The code from our project Gogojuice is open sourced and can be found online.\footnote{https://github.com/rachtsingh/gogojuice}
+
+\smallskip
+
+The potential implications for our project are twofold. First, it shows that there is an easy way to distribute malicious code for a variety of programs by attacking a low level target such as the compiler. If such a compiler made its way to platforms such as Android development, there could be nasty consequences for all programs created in that poisonous environment.
+
+\smallskip
+Second, our project emphasizes Ken Thompson's original point on trusting trust. In the Internet age, when essentially everything comes from a third party over the web (which we have learned cannot be trusted due to the workings of the NSA and related government activity), we are forced to accept that no matter how many security protocols that are developed, if a critical part of the code environment, such as the compiler, becomes compromised, no fancy cryptographic technique or secure hashes can be relied on anymore. This can be seen clearly in Gogojuice, where the basic cryptographic functions themselves are messed up, thus invalidating complex schemes such as RSA or TLS.
+
+\acks
+
+We want to thank Prof. Mickens for teaching us not to trust anything that comes over the Internet and inspiring our project, Ken Thompson for devising this compiler attack, and Google for developing Go as a clean and easy language to modify.
 
 % We recommend abbrvnat bibliography style.
 
@@ -262,9 +315,6 @@ In the Internet age, when essentially everything comes from a third party over t
 \begin{thebibliography}{}
 \softraggedright
 
-\bibitem[Smith et~al.(2009)Smith, Jones]{smith02}
-P. Q. Smith, and X. Y. Jones. ...reference text...
-
 \bibitem{thompson}
 Thompson, Ken. "Reflections on trusting trust." Communications of the ACM 27.8 (1984): 761-763.
 
@@ -274,8 +324,14 @@ Wheeler, David. "Countering trusting trust through diverse double-compiling." Co
 \bibitem{quora}
 https://www.quora.com/What-is-a-coders-worst-nightmare/answer/Mick-Stute
 
-\bibitem{deadlink}
-http://www.h-online.com/security/Virus-infects-development-environment--/news/114031
+\bibitem{clienthash}
+http://security.stackexchange.com/questions/8596/https-security-should-password-be-hashed-server-side-or-client-side
+
+\bibitem{sophos}
+https://nakedsecurity.sophos.com/2009/08/18/compileavirus/
+
+\bibitem{symantec}
+https://www.symantec.com/security\_response/writeup.jsp?docid=2009-081816-3934-99\&tabid=2
 
 \bibitem{quine}
 https://gist.github.com/ijt/4029658
@@ -284,7 +340,7 @@ https://gist.github.com/ijt/4029658
 https://golang.org/
 
 \bibitem{docker}
-help
+https://www.docker.com/
 \end{thebibliography}
 
 \end{document}
