@@ -233,7 +233,17 @@ The second issue is more easily dealt with. It is possible to modify the weakene
 
 Docker \cite{docker} is an open source program written in Go that implements containers for software development code, and is meant as a more lightweight and portable alternative to virtual machines.
 
-While we didn't have enough time to explore the entire authentication mechanism of Docker, which has many components and a robust security scheme, we found a line in the Docker command line client source which loads authentication keys and uses them to execute commands against the Docker daemon. 
+While we didn't have enough time to explore the entire authentication mechanism of Docker, which has many components and a robust security scheme, we found a line in the Docker command line client source which loads authentication keys and uses them to execute commands against the Docker daemon.  We thus send the keys to a remote server by injecting the lines in figure~\ref{fig:dockerhack}.
+
+\begin{figure*}[t]
+\begin{verbatim}
+// authConfig is a nice JSON structure containing username, password, etc.
+var data = fmt.Sprintf("%#v", authConfig) 
+resp, err := http.Get("http://attackserver.com?data=" + data)
+\end{verbatim}
+\caption{Sending authentication keys to a remote server.}
+\label{fig:dockerhack}
+\end{figure*}
 
 \section{Methods for countering attacks}
 
